@@ -1,8 +1,14 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import httpagentparser
 
 st.set_page_config(layout="wide")
+
+# Detect device type
+user_agent = st.experimental_get_query_params().get("user_agent", [""])[0]
+device_info = httpagentparser.detect(user_agent)
+device_type = device_info.get("platform", {}).get("name", "Desktop")
 
 # Example data
 data = pd.read_excel("Technical Ticket Analysis.xlsx")
@@ -17,6 +23,9 @@ data = data.dropna(subset=['Start Date', 'End Date'])
 
 # Streamlit App
 st.title("Interactive Gantt Chart")
+
+# Display detected device type
+st.write(f"Detected Device: {device_type}")
 
 # Filter by Tag
 tags = ["All"] + list(data["Tag"].unique())
@@ -37,7 +46,22 @@ if not filtered_data.empty:
     )
     fig.update_yaxes(title="", autorange="reversed")
     fig.update_xaxes(title="Date")
-    fig.update_layout(width=500)
+
+    if 'Mobile' in device_type:
+        fig.update_layout(
+            autosize=True,
+            height=400,
+            margin=dict(l=5, r=5, t=20, b=5),
+            font=dict(size=10),
+        )
+    else:
+        fig.update_layout(
+            autosize=True,
+            height=600,
+            margin=dict(l=10, r=10, t=30, b=10),
+            font=dict(size=12),
+        )
+
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.write("No tasks available for the selected tag.")
