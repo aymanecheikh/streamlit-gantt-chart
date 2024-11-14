@@ -38,29 +38,14 @@ if not filtered_data.empty:
     fig.update_yaxes(title="", autorange="reversed")
     fig.update_xaxes(title="Date")
 
-    window_width = st.columns((1,))[0]._parent._parent._get_delta_path
-    if window_width and window_width < 768:
-        fig.update_layout(
-            autosize=True,
-            height=400,
-            margin=dict(l=5, r=5, t=20, b=5),
-            font=dict(size=10),
-        )
-    elif window_width and window_width < 1200:
-        fig.update_layout(
-            autosize=True,
-            height=500,
-            margin=dict(l=10, r=10, t=30, b=10),
-            font=dict(size=12),
-        )
-    else:
-        fig.update_layout(
-            autosize=True,
-            height=600,
-            margin=dict(l=15, r=15, t=40, b=15),
-            font=dict(size=14),
-        )
 
+    fig.update_layout(
+        autosize=True,
+        height=600,
+        margin=dict(l=15, r=15, t=40, b=15),
+        font=dict(size=12),
+    )
+    
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.write("No tasks available for the selected tag.")
