@@ -5,42 +5,6 @@ from streamlit.components.v1 import html
 
 st.set_page_config(layout="wide")
 
-device_detection_html = """
-<script>
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-    const deviceType = isMobile ? "Mobile" : "Desktop";
-    document.body.setAttribute("data-device-type", deviceType);
-    const streamlitEvent = new Event("streamlit:device-type-detected");
-    streamlitEvent.deviceType = deviceType;
-    window.parent.dispatchEvent(streamlitEvent);
-</script>
-"""
-
-html(device_detection_html)
-
-# Detect device type
-if "device_type" not in st.session_state:
-    # Use the body's data attribute to detect the device type
-    st.session_state["device_type"] = "Desktop"
-
-device_type = st.session_state["device_type"]
-js_code = """
-<script>
-    window.addEventListener("streamlit:device-type-detected", function(event) {
-        fetch(window.location.href + "&device_type=" + event.deviceType)
-            .then(response => console.log("Device type sent to Streamlit:", event.deviceType));
-    });
-</script>
-"""
-html(js_code)
-
-query_params = st.experimental_get_query_params()
-if "device_type" in query_params:
-    st.session_state["device_type"] = query_params["device_type"][0]
-
-device_type = st.session_state["device_type"]
-st.write(f"Detected Device: {device_type}")
-
 data = pd.read_excel("Technical Ticket Analysis.xlsx")
 
 # Convert date columns to datetime format
@@ -53,10 +17,6 @@ data = data.dropna(subset=['Start Date', 'End Date'])
 
 # Streamlit App
 st.title("Interactive Gantt Chart")
-
-# Display detected device type
-device_type = st.session_state['device_type']
-st.write(f"Detected Device: {device_type}")
 
 # Filter by Tag
 tags = ["All"] + list(data["Tag"].unique())
@@ -78,19 +38,27 @@ if not filtered_data.empty:
     fig.update_yaxes(title="", autorange="reversed")
     fig.update_xaxes(title="Date")
 
-    if device_type == 'Mobile':
+    window_width = st.columns((1,))[0]._parent._parent._get_delta_path
+    if window_width and window_width < 768:
         fig.update_layout(
             autosize=True,
             height=400,
             margin=dict(l=5, r=5, t=20, b=5),
             font=dict(size=10),
         )
+    elif window_width and window_width < 1200:
+        fig.update_layout(
+            autosize=True,
+            height=500,
+            margin=dict(l=10, r=10, t=30, b=10),
+            font=dict(size=12),
+        )
     else:
         fig.update_layout(
             autosize=True,
             height=600,
-            margin=dict(l=10, r=10, t=30, b=10),
-            font=dict(size=12),
+            margin=dict(l=15, r=15, t=40, b=15),
+            font=dict(size=14),
         )
 
     st.plotly_chart(fig, use_container_width=True)
