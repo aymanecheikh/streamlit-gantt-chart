@@ -1,16 +1,30 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-import httpagentparser
 
 st.set_page_config(layout="wide")
 
-# Detect device type
-user_agent = st.experimental_get_query_params().get("user_agent", [""])[0]
-device_info = httpagentparser.detect(user_agent)
-device_type = device_info.get("platform", {}).get("name", "Desktop") or "Desktop"
+st.markdown(
+    """
+    <script>
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    const deviceType = isMobile ? "Mobile" : "Desktop";
+    document.body.setAttribute("data-device", deviceType);
+    </script>
+    <style>
+    [data-device="Mobile"] .block-container {
+        padding: 0.5rem;
+    }
+    </style>
+""",
+unsafe_allow_html=True,
+)
 
-# Example data
+# Detect device type
+if "device_type" not in st.session_state:
+    # Use the body's data attribute to detect the device type
+    st.session_state["device_type"] = "Mobile" if "Mobi" in st.user_agent else "Desktop"
+
 data = pd.read_excel("Technical Ticket Analysis.xlsx")
 
 # Convert date columns to datetime format
@@ -25,6 +39,7 @@ data = data.dropna(subset=['Start Date', 'End Date'])
 st.title("Interactive Gantt Chart")
 
 # Display detected device type
+device_type = st.session_state['device_type']
 st.write(f"Detected Device: {device_type}")
 
 # Filter by Tag
@@ -47,7 +62,7 @@ if not filtered_data.empty:
     fig.update_yaxes(title="", autorange="reversed")
     fig.update_xaxes(title="Date")
 
-    if device_type and isinstance(device_type, str) and 'Mobile' in device_type:
+    if device_type == 'Mobile':
         fig.update_layout(
             autosize=True,
             height=400,
