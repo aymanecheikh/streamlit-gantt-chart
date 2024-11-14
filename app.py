@@ -1,27 +1,45 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from streamlit.components.v1 import html
 
 st.set_page_config(layout="wide")
 
-device_type_js = """
-    <script>
+device_detection_html = """
+<script>
     const isMobile = /Mobi|Android/i.test(navigator.userAgent);
     const deviceType = isMobile ? "Mobile" : "Desktop";
-     window.parent.postMessage({deviceType: deviceType}, "*");
-    </script>
+    document.body.setAttribute("data-device-type", deviceType);
+    const streamlitEvent = new Event("streamlit:device-type-detected");
+    streamlitEvent.deviceType = deviceType;
+    window.parent.dispatchEvent(streamlitEvent);
+</script>
 """
 
-st.markdown(device_type_js, unsafe_allow_html=True)
+html(device_detection_html)
 
 # Detect device type
 if "device_type" not in st.session_state:
     # Use the body's data attribute to detect the device type
     st.session_state["device_type"] = "Desktop"
 
-message = st.experimental_get_query_params().get("device_type", ["Desktop"])[0]
-if message in ["Mobile", "Desktop"]:
-    st.session_state["device_type"] = message
+device_type = st.session_state["device_type"]
+js_code = """
+<script>
+    window.addEventListener("streamlit:device-type-detected", function(event) {
+        fetch(window.location.href + "&device_type=" + event.deviceType)
+            .then(response => console.log("Device type sent to Streamlit:", event.deviceType));
+    });
+</script>
+"""
+html(js_code)
+
+query_params = st.experimental_get_query_params()
+if "device_type" in query_params:
+    st.session_state["device_type"] = query_params["device_type"][0]
+
+device_type = st.session_state["device_type"]
+st.write(f"Detected Device: {device_type}")
 
 data = pd.read_excel("Technical Ticket Analysis.xlsx")
 
