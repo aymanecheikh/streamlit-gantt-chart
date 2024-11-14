@@ -4,26 +4,24 @@ import streamlit as st
 
 st.set_page_config(layout="wide")
 
-st.markdown(
-    """
+device_type_js = """
     <script>
     const isMobile = /Mobi|Android/i.test(navigator.userAgent);
     const deviceType = isMobile ? "Mobile" : "Desktop";
-    document.body.setAttribute("data-device", deviceType);
+     window.parent.postMessage({deviceType: deviceType}, "*");
     </script>
-    <style>
-    [data-device="Mobile"] .block-container {
-        padding: 0.5rem;
-    }
-    </style>
-""",
-unsafe_allow_html=True,
-)
+"""
+
+st.markdown(device_type_js, unsafe_allow_html=True)
 
 # Detect device type
 if "device_type" not in st.session_state:
     # Use the body's data attribute to detect the device type
-    st.session_state["device_type"] = "Mobile" if "Mobi" in st.user_agent else "Desktop"
+    st.session_state["device_type"] = "Desktop"
+
+message = st.experimental_get_query_params().get("device_type", ["Desktop"])[0]
+if message in ["Mobile", "Desktop"]:
+    st.session_state["device_type"] = message
 
 data = pd.read_excel("Technical Ticket Analysis.xlsx")
 
