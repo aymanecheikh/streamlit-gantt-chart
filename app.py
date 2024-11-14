@@ -8,7 +8,7 @@ st.set_page_config(layout="wide")
 # Detect device type
 user_agent = st.experimental_get_query_params().get("user_agent", [""])[0]
 device_info = httpagentparser.detect(user_agent)
-device_type = device_info.get("platform", {}).get("name", "Desktop")
+device_type = device_info.get("platform", {}).get("name", "Desktop") or "Desktop"
 
 # Example data
 data = pd.read_excel("Technical Ticket Analysis.xlsx")
@@ -47,7 +47,7 @@ if not filtered_data.empty:
     fig.update_yaxes(title="", autorange="reversed")
     fig.update_xaxes(title="Date")
 
-    if 'Mobile' in device_type:
+    if device_type and isinstance(device_type, str) and 'Mobile' in device_type:
         fig.update_layout(
             autosize=True,
             height=400,
